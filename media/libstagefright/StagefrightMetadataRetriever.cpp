@@ -163,7 +163,7 @@ static VideoFrame *extractVideoFrame(
     // TODO: Use Flexible color instead
     videoFormat->setInt32("color-format", OMX_COLOR_FormatYUV420Planar);
 
-    videoFormat->setInt32("thumbnail-mode", 1);
+
     // For the thumbnail extraction case, try to allocate single buffer in both
     // input and output ports, if seeking to a sync frame. NOTE: This request may
     // fail if component requires more than that for decoding.
@@ -171,6 +171,7 @@ static VideoFrame *extractVideoFrame(
     if (!isSeekingClosest) {
         videoFormat->setInt32("android._num-input-buffers", 1);
         videoFormat->setInt32("android._num-output-buffers", 1);
+        videoFormat->setInt32("thumbnail-mode", 1);
     }
 
     status_t err;
@@ -491,6 +492,10 @@ VideoFrame *StagefrightMetadataRetriever::getFrameAtTime(
     for (i = 0; i < n; ++i) {
         sp<MetaData> meta = mExtractor->getTrackMetaData(i);
 
+        if (meta == NULL) {
+            continue;
+        }
+
         const char *mime;
         CHECK(meta->findCString(kKeyMIMEType, &mime));
 
@@ -670,6 +675,10 @@ void StagefrightMetadataRetriever::parseMetaData() {
 
     size_t numTracks = mExtractor->countTracks();
 
+    if (numTracks == 0) {      //If no tracks available, corrupt or not valid stream
+        return;
+    }
+
     char tmp[32];
     sprintf(tmp, "%zu", numTracks);
 
@@ -693,6 +702,9 @@ void StagefrightMetadataRetriever::parseMetaData() {
     String8 timedTextLang;
     for (size_t i = 0; i < numTracks; ++i) {
         sp<MetaData> trackMeta = mExtractor->getTrackMetaData(i);
+        if (trackMeta == NULL) {
+            continue;
+        }
 
         int64_t durationUs;
         if (trackMeta->findInt64(kKeyDuration, &durationUs)) {
