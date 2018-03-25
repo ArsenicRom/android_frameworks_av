@@ -136,7 +136,7 @@ hardware::Return<void> CameraHardwareInterface::dataCallback(
     return hardware::Void();
 }
 
-#ifdef QCOM_HARDWARE
+#ifdef QTI_CAMERA_DEVICE
 hardware::Return<void> CameraHardwareInterface::QDataCallback(
         DataCallbackMsg msgType, uint32_t data, uint32_t bufferIndex,
         const vendor::qti::hardware::camera::device::V1_0::QCameraFrameMetadata& metadata) {
